@@ -177,7 +177,8 @@ while True:
             temperature_list = []
 
         # If the length of the list whose temperature is constantly being measured is greater than 30, remove the oldest value
-        if len(temperature_list) >= 30:
+        # The length of the list allows you to set the time gap that will be the basis for the rate of temperature increase
+        if len(temperature_list) >= 10:
             temperature_list.pop(0)
 
     # Code for handling errors that may occur while reading temperature and humidity values from the DHT11 sensor
