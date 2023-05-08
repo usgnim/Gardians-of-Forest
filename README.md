@@ -1,4 +1,4 @@
-# Gardians-of-Forest
+# Guardians-of-Forest
 Qualifying Round Submission Materials
 
 ![슬라이드0001](https://user-images.githubusercontent.com/105275495/236812019-26d4bdc8-c064-4e33-b454-b71f21383e06.png)
