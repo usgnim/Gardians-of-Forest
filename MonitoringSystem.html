@@ -1,0 +1,337 @@
+<html>
+  <!--This code is for web applications that use HTML, CSS, Firebase Realtime Database, and Firebase SDK-->
+  <head>
+    <meta charset="utf-8">
+    <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase.js"></script>
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          text-align: center;
+        }
+        .shape {
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          margin-right: 5px;
+          border-radius: 50%;
+          background-color: #0099ff;
+        }
+        .warning {
+          background-color: red;
+        }
+      </style>
+    <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-database.js"></script>
+  </head>
+
+  <body>
+    <h1>Fairly Monitoring System</h1>
+    <h3>Guardians of Forest</h3>
+    <!--In HTML web pages, elements used to print wind-related information-->
+    <div id="now-data-container"></div>
+    <br>
+    <div id="resultDiv">
+        <table id="resultTable">
+          <thead>
+            <!--Aerial photographs showing sensor installation locations-->
+            <img src="https://postfiles.pstatic.net/MjAyMzA1MDdfMTEg/MDAxNjgzNDU1MDk4NDQ2.BfRyhcrFmDSDN5IWSnvvyv0IDc1Ff7HZUdrfQqPqqHYg.AI-9QIYW2A75C3h_8nAofgiOTTLDaZGuQKAx6Fzpjykg.PNG.eileenjjy/%EC%A0%9C%EB%AA%A9%EC%9D%84-%EC%9E%85%EB%A0%A5%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94_-001_(1).png?type=w773" width="350" height="350"><p>
+
+            <!-- Table headers for wind direction and speed at two different heights -->
+            <tr>
+              <th colspan="3">10m</th>
+              <th colspan="3">2m</th>
+            </tr>
+            <tr>
+              <th>풍향</th>
+              <th>풍향방위</th>
+              <th>풍속</th>
+              <th>풍향</th>
+              <th>풍향방위</th>
+              <th>풍속</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <!-- Table rows to display wind data at two different heights -->
+              <td id="wd10m"></td>
+              <td id="wd10mstr"></td>
+              <td id="ws10m"></td>
+              <td id="wd2mstr"></td>
+              <td id="wd2m"></td>
+              <td id="ws2m"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    <!--Container for displaying warning messages-->
+    <div id="warning-data-container"></div>
+    <!--A container that displays the history of previous data-->
+    <div id="history-data-container"></div>
+    <!--Space to display data objects converted to JSON format-->
+    <pre id="object"></pre>
+
+    <!--Previous data recording button. When clicked, the history-data-container displays the previous data history-->
+    <div>
+      <button id="history-button">History</button>
+    </div>
+
+    <script>
+      //configuration object for connecting to the Firebase database
+      var firebaseConfig = {
+        apiKey: "AIzaSyCsQxzQDE_qgFKtSM1SNobof-dAbvRg4b8",
+        authDomain: "girls-in-ict-2b1ea.firebaseapp.com",
+        databaseURL: "https://girls-in-ict-2b1ea-default-rtdb.firebaseio.com",
+        projectId: "girls-in-ict-2b1ea",
+        storageBucket: "girls-in-ict-2b1ea.appspot.com",
+        messagingSenderId: "492468069664",
+        appId: "1:492468069664:web:1897c11d39f08e057be345",
+        measurementId: "G-5JZ7D7B3FE" 
+    };
+
+      // Code for initializing apps using the Firebase SDK
+      firebase.initializeApp(firebaseConfig);
+
+      // Code that accesses the Firebase Realtime Database, fetches data stored in the "/Now" path, and dynamically outputs it to HTML pages
+      //Get data each time a "value" event occurs using the on() method
+      var nowRef = firebase.database().ref("/Now");
+      nowRef.on("value", function(snapshot) {
+ 
+        var data = snapshot.val();
+        var container = document.getElementById("now-data-container");
+        container.innerHTML = `
+          <table style="border-collapse: collapse;">
+            <tr>
+              <th style="border: 1px solid black; padding: 5px; text-align: center;">Temperature</th>
+              <th style="border: 1px solid black; padding: 5px; text-align: center;">Humidity</th>
+              <th style="border: 1px solid black; padding: 5px; text-align: center;">Gas</th>
+              <th style="border: 1px solid black; padding: 5px; text-align: center;">Timestamp</th>
+            </tr>
+            <tr>
+              <td style="border: 1px solid black; padding: 5px; text-align: center;">${data.Temperature}</td>
+              <td style="border: 1px solid black; padding: 5px; text-align: center;">${data.Humidity}</td>
+              <td style="border: 1px solid black; padding: 5px; text-align: center;">${data.Gas}</td>
+              <td style="border: 1px solid black; padding: 5px; text-align: center;">${data.timestamp}</td>
+            </tr>
+            <p>
+          </table>
+        `;
+      });
+
+      // Code for obtaining mountain weather information using the Korea Meteorological Administration's Mountain Weather Information API
+      //Create XMLHtpRequest Object
+      var xhr = new XMLHttpRequest(); 
+      //Save API Request URL
+      var url = 'http://apis.data.go.kr/1400377/mtweather/mountListSearch'; 
+      //Service Key
+      var queryParams = '?' + encodeURIComponent('serviceKey') + '='+'v8to9ouHBVkblH6mi9VFNF%2FVQC%2B2tpFtDLsSahbwkhFbCom82bjmnN2Gf3KLi7nau0G59fLWPj4TT%2FIeitjFEw%3D%3D'; 
+      //Adding API Request Parameters
+      queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent('1'); 
+      queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('10'); 
+      //Set API response format to XML
+      queryParams += '&' + encodeURIComponent('_type') + '=' + encodeURIComponent('xml'); 
+      queryParams += '&' + encodeURIComponent('localArea') +'='+ encodeURIComponent('1');
+      queryParams += '&' + encodeURIComponent('obsid') +'=' +encodeURIComponent('1910');
+      queryParams += '&' + encodeURIComponent('tm') +'=' + encodeURIComponent('202106301809');
+
+
+      // This code creates an XMLHttpRequest object and sets the onreadystatechange event handler for that object
+      // Event handlers run when they receive a response from the server, parse the response data into an XML document, and then import all elements with the tag "item" from that document and add them to the table in the HTML document
+      var resultDiv = document.getElementById("resultDiv");
+      xhr.onreadystatechange = function () {
+        if (this.readyState == 4) {
+          //Parsing response data into XML documents
+          var xmlDoc = this.responseXML; 
+          //Locate the tbody element in the resultTable table element.
+          var tbody = document.querySelector("#resultTable tbody");
+          //The contents of the tbody element are set to an empty character string and initialized.
+          tbody.innerHTML = "";
+
+          //Imported all elements with the "item" tag from xmlDoc and stored in the items variable.
+          var items = xmlDoc.getElementsByTagName("item"); 
+          // Use for loop to access items sequentially by repeating each item element in an items array
+          for (var i = 0; i < items.length; i++) { 
+            var item = items[i];
+            //Generate <tr> elements in HTML documents
+            var tr = document.createElement("tr"); 
+            var td1 = document.createElement("td");
+            var td2 = document.createElement("td");
+            var td3 = document.createElement("td");
+            var td4 = document.createElement("td");
+            var td5 = document.createElement("td");
+            var td6 = document.createElement("td");
+            // Locate the "wd10m" element in the XML document, retrieve the text content of the first element, and assign it to the variable td1
+            td1.innerText = item.getElementsByTagName("wd10m")[0].textContent; 
+            td2.innerText = item.getElementsByTagName("wd10mstr")[0].textContent;
+            td3.innerText = item.getElementsByTagName("ws10m")[0].textContent;
+            td4.innerText = item.getElementsByTagName("wd2m")[0].textContent;
+            td5.innerText = item.getElementsByTagName("wd2mstr")[0].textContent;
+            td6.innerText = item.getElementsByTagName("ws2m")[0].textContent;
+            //Add the td element referenced by the td1 variable as a sub-element of the tr element
+            tr.appendChild(td1); 
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+            tr.appendChild(td5);
+            tr.appendChild(td6);
+            tbody.appendChild(tr);
+
+          }
+        }
+      };
+      // Prepare HTTP requests using the open() method of the XMLHttpRequest object
+      xhr.open('GET',url + queryParams); 
+      // Send the request to the server using the send() method
+      xhr.send(''); 
+
+
+    
+
+      // Code for getting references to the "/warning" path from the Realtime Database in Firebase and using it to get data
+      var warningRef = firebase.database().ref("/warning");
+      // Assign HTML elements to variables to display imported data
+      var container = document.getElementById("warning-data-container");
+      var sprinkler = document.getElementById("sprinkler");
+      var ultralow = document.getElementById("Ultra-low frequency");
+
+    
+      //Code for importing "warning" alert data from the Firebase's real-time database and displaying it as an HTML table.
+      // Code that allows Firebase and HTML to be used to monitor alerts and device status on web pages
+      warningRef.on("value", function(snapshot) {
+        var data = snapshot.val();
+        container.innerHTML = `
+          <table style="border: 1px solid black; border-collapse: collapse;">
+            <tr>
+              <th style="border: 1px solid black; padding: 5px; text-align: left;" colspan="2">Warning</th>
+            </tr>
+            <tr>
+              <td style="border: 1px solid black; padding: 5px; text-align: left;${data ? 'background-color: pink;' : ''}">${data.message}</td>
+
+              <td style="border: 1px solid black; padding: 5px; text-align: left;">${data.timestamp}</td>
+            </tr>
+            <br>
+          </table>
+          <br>
+
+          <table style="width: 50%;">
+            <tr>
+                <th style="width: 50%;"colspan="2">Device Status</th>
+                
+            </tr>
+            <tr>
+                <td style="width: 50%; width: 50%; border: 1px solid black; padding: 5px; text-align: center;">sprinkler</td>
+                <td style="width: 50%;">
+                    <span class="shape" id="sprinkler">
+                        <br>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; border: 1px solid black; padding: 5px; text-align: center;">Ultra-low frequency</td>
+                <td style="width: 50%;">
+                    <span class="shape" id="Ultra-low frequency">
+                        <br>
+                    </span>
+                </td>
+            </tr>
+        </table>
+          
+          
+          
+        `;
+
+        // Code that monitors the "/warning" path of the database in real time, retrieves warning messages and timestamps, and displays them in the HTML table
+
+        // Code used to display device status on the screen
+        var sprinklerShape = document.getElementById("sprinkler");
+        var ultralowShape = document.getElementById("Ultra-low frequency");
+
+       
+
+        if (data) {
+          
+          // Performs the function of initializing background color after 3 seconds if data is imported from Firebase
+          setTimeout(function() {
+            container.querySelector('td').style.backgroundColor = '';
+          }, 3000);
+          
+          // Code that adjusts the background color of the two devices on the web page, 'sprinkler' and 'Ultra-low frequency', based on data from Firebase
+
+          if (data.message.includes("Humidity")) {
+            sprinklerShape.style.backgroundColor = "red";
+            setTimeout(function() {
+              sprinklerShape.style.backgroundColor = "";
+            }, 3000);
+          } else if (data.message.includes("Temperature") || data.message.includes("Gas")) {
+            sprinklerShape.style.backgroundColor = "red";
+            ultralowShape.style.backgroundColor = "red";
+            setTimeout(function() {
+              sprinklerShape.style.backgroundColor = "";
+              ultralowShape.style.backgroundColor = "";
+            }, 3000);
+          }
+        } else {
+          
+          container.querySelector('td').style.backgroundColor = '';
+        }  
+      });
+
+        
+    
+      window.onload = function() {
+        // Create a database reference for the "/history" path in Firebase
+        var historyRef = firebase.database().ref("/history");
+        // Saving Dynamically Generated History Data
+        var container = document.getElementById("history-data-container"); 
+        var table;
+
+        // Add a click event for the "history-button" element, display the "history-data-container" element when it is clicked, import data from Firebase and output it to the table
+
+        // When the history button is pressed, the history list of the Firebase that is being updated in real time is output
+        // When the list opens, rename the button to close history, and press the button to close the open list
+
+        document.getElementById("history-button").addEventListener("click", function() {
+          if (container.style.display === "none") {
+            container.style.display = "block";
+            this.innerHTML = "Close History";
+            
+            historyRef.on("value", function(snapshot) {
+              var data = snapshot.val();
+            
+              if (!data) {
+                container.innerHTML = "No data available";
+                return;
+              }
+            
+              table = `
+                <table style="border-collapse: collapse;">
+                  <tr>
+                    <th style="border: 1px solid black; padding: 5px; text-align: center;">Temperature</th>
+                    <th style="border: 1px solid black; padding: 5px; text-align: center;">Humidity</th>
+                    <th style="border: 1px solid black; padding: 5px; text-align: center;">Timestamp</th>
+                  </tr>
+              `;
+              // Output data to each row of the table using the repeat door
+              Object.keys(data).forEach(function(key) {
+                var row = data[key];
+                table += `
+                <p>
+                  <tr>
+                    <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.Temperature}</td>
+                    <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.Humidity}</td>
+                    <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.timestamp}</td>
+                  </tr>
+                `;
+              });
+              table += "</table>";
+              container.innerHTML = table;
+            });
+          } else {
+            // When the "Close History" button is clicked, it performs the action of closing the list
+            container.style.display = "none";
+            this.innerHTML = "History";
+          }
+        });
+      };
+        
+    </script>
+  </body>
+</html>
