@@ -191,7 +191,6 @@ while True:
         raise error
     
     # Wait 5 seconds before the next code executes
-    # Can avoid problems by waiting for the system to stabilize for 5 seconds
     time.sleep(5.0)
 
 
