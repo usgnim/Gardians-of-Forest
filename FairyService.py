@@ -112,7 +112,7 @@ while True:
         # Add current temperature to list
         temperature_list.append(temperature_c)
         
-        # Operation of the LED sensor (meaning sprinkler) when humidity is less than 45
+        # Operation of the LED sensor (meaning sprinkler) when humidity is same or less than 45
         if humidity <= 45:
             # Send humidity warning messages to Firebase
             save_hum_warning_to_firebase()
